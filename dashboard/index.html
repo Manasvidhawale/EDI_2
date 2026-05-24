@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RailSense AI — Railway Track Monitoring System</title>
+<meta name="description" content="AI-Assisted Intelligent Railway Monitoring System — Real-time ML predictions from ESP32 sensor data.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="scanlines"></div>
+<div class="grid-overlay"></div>
+<div class="particles" id="particles"></div>
+
+<div class="wrap">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="#00e5ff" stroke-width="1.5">
+        <path d="M2 14 L10 4 L18 14"/>
+        <path d="M5 14 L10 8 L15 14"/>
+        <line x1="2" y1="16" x2="18" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <h1>RAILSENSE AI</h1>
+      <p>Railway Track Monitoring System v3.1.4</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill"><div class="dot"></div>NETWORK LIVE</div>
+    <div class="status-pill"><div class="dot amber"></div>ESP32 NODES: 4</div>
+    <div class="status-pill"><div class="dot red"></div>ALERT ACTIVE</div>
+    <div class="time" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- HERO COMMAND CENTER -->
+<div class="hero" style="margin-top:12px">
+  <div class="hcard">
+    <div class="hcard-label">Track Safety</div>
+    <div class="hcard-value">87.4%</div>
+    <div class="hcard-sub">Overall network score</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:87%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Threat Level</div>
+    <div class="hcard-value" style="color:var(--amber)">MODERATE</div>
+    <div class="hcard-sub">Zone C-4 anomaly detected</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:54%;background:linear-gradient(90deg,var(--amber),#ffdd00)"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">AI Confidence</div>
+    <div class="hcard-value">94.2%</div>
+    <div class="hcard-sub">Model accuracy: 98.1%</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:94%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Active Sensors</div>
+    <div class="hcard-value">12/14</div>
+    <div class="hcard-sub">2 nodes offline</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:85%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Network Health</div>
+    <div class="hcard-value">96.7%</div>
+    <div class="hcard-sub">WiFi RSSI: -42 dBm</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:96%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Uptime</div>
+    <div class="hcard-value">99.1%</div>
+    <div class="hcard-sub" id="uptime">Loading...</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:99%"></div></div>
+  </div>
+</div>
+
+<!-- MAIN GRID: Sensors + Track + AI -->
+<div class="main-grid">
+
+  <!-- SENSOR PANEL -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-antenna" aria-hidden="true"></i>LIVE SENSOR DATA</div>
+    <div class="sensors-grid">
+      <!-- ✅ REAL: distance fed from live_data.json -->
+      <div class="sensor-item">
+        <div class="s-name">Ultrasonic</div>
+        <div><span class="s-val" id="dist">—</span><span class="s-unit"> cm</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" id="dist-bar" style="width:0%"></div></div>
+        <span class="badge ok" id="dist-badge">WAITING</span>
+      </div>
+      <!-- ✅ REAL: vibration fed from live_data.json -->
+      <div class="sensor-item">
+        <div class="s-name">Vibration X</div>
+        <div><span class="s-val" id="vib">—</span><span class="s-unit"> g</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" id="vib-bar" style="width:0%"></div></div>
+        <span class="badge ok" id="vib-badge">WAITING</span>
+      </div>
+      <div class="sensor-item">
+        <div class="s-name">Accel Y</div>
+        <div><span class="s-val">—</span><span class="s-unit"> g</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" style="width:0%"></div></div>
+        <span class="badge ok">ESP32</span>
+      </div>
+      <div class="sensor-item">
+        <div class="s-name">Temperature</div>
+        <div><span class="s-val">—</span><span class="s-unit"> °C</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" style="width:0%"></div></div>
+        <span class="badge ok">ESP32</span>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,229,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:10px">
+        <div style="font-size:9px;color:rgba(0,229,255,.4);letter-spacing:1px;margin-bottom:6px">AVG VIBRATION</div>
+        <div style="font-family:'Orbitron',monospace;font-size:16px;color:var(--cyan);font-weight:600" id="avg-vib">0.64 g</div>
+      </div>
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:10px">
+        <div style="font-size:9px;color:rgba(0,229,255,.4);letter-spacing:1px;margin-bottom:6px">DATA QUALITY</div>
+        <div style="font-family:'Orbitron',monospace;font-size:16px;color:#69f0ae;font-weight:600">98.4%</div>
+      </div>
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:10px">
+        <div style="font-size:9px;color:rgba(0,229,255,.4);letter-spacing:1px;margin-bottom:6px">LAST SYNC</div>
+        <div style="font-size:11px;color:rgba(0,229,255,.7)">now</div>
+      </div>
+      <div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:10px">
+        <div style="font-size:9px;color:rgba(0,229,255,.4);letter-spacing:1px;margin-bottom:6px">SAMPLE RATE</div>
+        <div style="font-size:11px;color:rgba(0,229,255,.7)">500 Hz</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACK VISUALIZER -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-route" aria-hidden="true"></i>LIVE TRACK MONITOR</div>
+    <div class="track-vis">
+      <div class="twin-grid"></div>
+      <div class="track-sleepers" id="sleepers"></div>
+      <div class="track-rail top"></div>
+      <div class="track-rail bot"></div>
+      <div class="train"><div class="train-body"><div class="train-light"></div></div></div>
+      <div class="scan-pulse"></div>
+      <!-- Checkpoints -->
+      <div class="checkpoint" style="left:20%"></div>
+      <div class="checkpoint warn" style="left:42%"></div>
+      <div class="checkpoint danger" style="left:65%"></div>
+      <div class="checkpoint" style="left:82%"></div>
+    </div>
+    <div class="track-info">
+      <div class="track-segment"><div class="seg-dot" style="background:#69f0ae"></div><span>Zone A</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:var(--amber)"></div><span>Zone B</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:var(--red);animation:blink .8s infinite"></div><span>Zone C</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:#69f0ae"></div><span>Zone D</span></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <div style="font-size:10px;color:rgba(255,255,255,.4);padding:3px 8px;border:1px solid rgba(0,229,255,.1);border-radius:10px">Track Length: 4.2 km</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);padding:3px 8px;border:1px solid rgba(0,229,255,.1);border-radius:10px">Speed: 87 km/h</div>
+      <div style="font-size:10px;color:var(--red);padding:3px 8px;border:1px solid rgba(255,23,68,.3);border-radius:10px;animation:blink 1.2s infinite">⚠ Crack Zone C-4</div>
+    </div>
+    <!-- Digital twin mini -->
+    <div style="margin-top:10px">
+      <div style="font-size:9px;letter-spacing:1.5px;color:rgba(0,229,255,.3);margin-bottom:4px">DIGITAL TWIN — TRACK STATUS</div>
+      <div class="twin-vis">
+        <div class="twin-grid"></div>
+        <svg width="100%" height="150" style="position:absolute;inset:0" viewBox="0 0 300 150" preserveAspectRatio="none">
+          <line x1="20" y1="75" x2="280" y2="75" stroke="rgba(0,229,255,.3)" stroke-width="3" stroke-dasharray="8 4"/>
+          <line x1="20" y1="60" x2="280" y2="60" stroke="rgba(0,229,255,.2)" stroke-width="1.5"/>
+          <line x1="20" y1="90" x2="280" y2="90" stroke="rgba(0,229,255,.2)" stroke-width="1.5"/>
+          <rect x="50" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="90" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="130" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="170" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="210" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="250" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <!-- crack zone -->
+          <ellipse cx="190" cy="75" rx="18" ry="8" fill="rgba(255,23,68,.18)" stroke="rgba(255,23,68,.6)" stroke-width="1.5"/>
+          <text x="190" y="78" text-anchor="middle" font-size="7" fill="rgba(255,23,68,.9)" font-family="Orbitron,monospace">CRACK</text>
+        </svg>
+        <div class="twin-node" style="left:20%">
+          <div class="twin-node-dot ok"></div>
+          <div class="twin-label">S-01</div>
+        </div>
+        <div class="twin-node" style="left:45%">
+          <div class="twin-node-dot" style="border-color:var(--amber);background:rgba(255,171,0,.15)"></div>
+          <div class="twin-label">S-02</div>
+        </div>
+        <div class="twin-node" style="left:65%">
+          <div class="twin-node-dot danger"></div>
+          <div class="twin-label">S-03</div>
+        </div>
+        <div class="twin-node" style="left:85%">
+          <div class="twin-node-dot ok"></div>
+          <div class="twin-label">S-04</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI + ALERTS -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-brain" aria-hidden="true"></i>AI PREDICTION ENGINE</div>
+
+    <!-- ✅ REAL-TIME STATUS BOX -->
+    <div id="statusBox" style="
+      font-family:'Orbitron',monospace;
+      font-size:15px;
+      font-weight:700;
+      letter-spacing:3px;
+      text-align:center;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.05);
+      color:rgba(255,255,255,.5);
+      margin-bottom:12px;
+      transition:all .5s ease;
+    ">AWAITING DATA</div>
+
+    <div class="ai-grid">
+      <!-- ✅ REAL: crack probability from ML -->
+      <div class="ai-metric">
+        <div class="val" id="crack-prob">—</div>
+        <div class="lbl">Crack Prob.</div>
+      </div>
+      <!-- ✅ REAL: ML prediction label -->
+      <div class="ai-metric">
+        <div class="val" id="prediction" style="font-size:12px;letter-spacing:1px">WAITING</div>
+        <div class="lbl">ML Prediction</div>
+      </div>
+      <!-- ✅ REAL: model confidence / accuracy -->
+      <div class="ai-metric">
+        <div class="val" id="accuracy">—</div>
+        <div class="lbl">Confidence</div>
+      </div>
+      <div class="ai-metric">
+        <div class="val" style="color:#69f0ae" id="distance">—</div>
+        <div class="lbl">Distance cm</div>
+      </div>
+    </div>
+
+    <!-- Anomaly probability bar -->
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px">
+        <span>Anomaly Probability</span><span id="anom-pct">0%</span>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden">
+        <div id="anom-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--red));border-radius:3px;transition:width .8s ease"></div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;letter-spacing:1.5px;color:rgba(0,229,255,.4);margin-bottom:5px">AI DECISION LOG</div>
+    <div class="log-list" id="logList">
+      <div class="log-item">System initialised — awaiting ESP32 data...</div>
+    </div>
+
+    <div style="margin-top:14px;border-top:1px solid rgba(0,229,255,.08);padding-top:12px">
+      <div class="panel-title" style="margin-bottom:10px"><i class="ti ti-alert-triangle" aria-hidden="true"></i>ALERT MATRIX</div>
+      <div class="alert-list">
+        <div class="alert-item">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--red)">CRITICAL — Track Crack Zone C-4</div>
+            <div class="sub">Ultrasonic delta 8.2cm · Driver notified</div>
+          </div>
+          <div class="alert-time">14:32:14</div>
+        </div>
+        <div class="alert-item warn-item">
+          <div class="alert-icon">🔔</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--amber)">WARNING — High Vibration</div>
+            <div class="sub">MPU6050 accel 0.83g · Threshold 0.75g</div>
+          </div>
+          <div class="alert-time">14:31:55</div>
+        </div>
+        <div class="alert-item info-item">
+          <div class="alert-icon" style="font-size:14px">ℹ️</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--cyan)">INFO — Sensor S-02 sync</div>
+            <div class="sub">WiFi reconnected · RSSI: -52 dBm</div>
+          </div>
+          <div class="alert-time">14:29:01</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM ROW: Charts + Architecture + Future -->
+<div class="main-grid" style="margin-top:12px">
+
+  <!-- ANALYTICS -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-chart-line" aria-hidden="true"></i>DATA ANALYTICS</div>
+    <div class="chart-row" style="margin-top:0">
+      <div>
+        <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">VIBRATION TREND</div>
+        <div class="chart-mini"><canvas id="vibChart" height="100" aria-label="Vibration trend chart"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">DISTANCE FLUCTUATION</div>
+        <div class="chart-mini"><canvas id="distChart" height="100" aria-label="Distance chart"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">SEVERITY DISTRIBUTION</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;display:flex">
+          <div style="width:58%;background:#69f0ae;transition:width 1s"></div>
+          <div style="width:28%;background:var(--amber)"></div>
+          <div style="width:14%;background:var(--red);animation:pulse .8s infinite"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:5px;font-size:9px;color:rgba(255,255,255,.35)">
+        <span style="color:#69f0ae">■ Normal 58%</span>
+        <span style="color:var(--amber)">■ Warn 28%</span>
+        <span style="color:var(--red)">■ Critical 14%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE FLOW -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-topology-complex" aria-hidden="true"></i>SYSTEM ARCHITECTURE</div>
+    <svg class="flow-svg" viewBox="0 0 260 280" style="max-height:280px">
+      <defs>
+        <marker id="fw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+      <!-- Nodes -->
+      <g id="arcFlow">
+        <!-- Rail Track -->
+        <rect x="70" y="4" width="120" height="30" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.3)" stroke-width="1"/>
+        <text x="130" y="24" text-anchor="middle" font-size="10" fill="#00e5ff" font-family="Orbitron,monospace" letter-spacing="1">RAIL TRACK</text>
+        <!-- Arrow -->
+        <line x1="130" y1="34" x2="130" y2="52" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Sensors -->
+        <rect x="30" y="52" width="200" height="32" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.3)" stroke-width="1"/>
+        <text x="80" y="70" text-anchor="middle" font-size="8.5" fill="#aaa" font-family="Rajdhani">Ultrasonic</text>
+        <text x="180" y="70" text-anchor="middle" font-size="8.5" fill="#aaa" font-family="Rajdhani">MPU6050</text>
+        <line x1="130" y1="72" x2="130" y2="72" stroke="none"/>
+        <text x="130" y="73" text-anchor="middle" font-size="8.5" fill="rgba(0,229,255,.5)" font-family="Rajdhani">+</text>
+        <!-- Arrow -->
+        <line x1="130" y1="84" x2="130" y2="102" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- ESP32 -->
+        <rect x="70" y="102" width="120" height="30" rx="6" fill="rgba(0,100,200,.12)" stroke="rgba(0,150,255,.4)" stroke-width="1"/>
+        <text x="130" y="122" text-anchor="middle" font-size="10" fill="#4fc3f7" font-family="Orbitron,monospace">ESP32 MCU</text>
+        <!-- Arrow -->
+        <line x1="130" y1="132" x2="130" y2="150" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- AI Processing -->
+        <rect x="55" y="150" width="150" height="30" rx="6" fill="rgba(100,0,200,.1)" stroke="rgba(150,0,255,.35)" stroke-width="1"/>
+        <text x="130" y="170" text-anchor="middle" font-size="10" fill="#ce93d8" font-family="Orbitron,monospace">AI ENGINE</text>
+        <!-- Arrow -->
+        <line x1="130" y1="180" x2="130" y2="198" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Decision Engine -->
+        <rect x="60" y="198" width="140" height="30" rx="6" fill="rgba(255,171,0,.07)" stroke="rgba(255,171,0,.3)" stroke-width="1"/>
+        <text x="130" y="218" text-anchor="middle" font-size="10" fill="#ffab00" font-family="Orbitron,monospace">DECISION ENGINE</text>
+        <!-- Arrow -->
+        <line x1="90" y1="228" x2="55" y2="248" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <line x1="170" y1="228" x2="205" y2="248" stroke="rgba(255,23,68,.6)" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Dashboard -->
+        <rect x="10" y="248" width="90" height="28" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.25)" stroke-width="1"/>
+        <text x="55" y="266" text-anchor="middle" font-size="9" fill="#00e5ff" font-family="Orbitron,monospace">DASHBOARD</text>
+        <!-- Alerts -->
+        <rect x="160" y="248" width="90" height="28" rx="6" fill="rgba(255,23,68,.07)" stroke="rgba(255,23,68,.3)" stroke-width="1"/>
+        <text x="205" y="266" text-anchor="middle" font-size="9" fill="#ff1744" font-family="Orbitron,monospace">ALERTS</text>
+        <!-- APIs label -->
+        <text x="130" y="140" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.2)" font-family="Exo 2">MQTT / WebSocket / REST</text>
+      </g>
+      <!-- Animated scan line -->
+      <rect id="flowScan" x="10" y="0" width="240" height="3" rx="1" fill="rgba(0,229,255,.3)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,280;0,0" dur="3s" repeatCount="indefinite"/>
+      </rect>
+    </svg>
+  </div>
+
+  <!-- FUTURE SCOPE -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-rocket" aria-hidden="true"></i>FUTURE SCOPE</div>
+    <div class="scope-grid">
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-cpu" aria-hidden="true"></i></div>
+        <div class="name">Edge AI Inference</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-tool" aria-hidden="true"></i></div>
+        <div class="name">Predictive Maintenance</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-cloud-computing" aria-hidden="true"></i></div>
+        <div class="name">Cloud Analytics</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-device-laptop" aria-hidden="true"></i></div>
+        <div class="name">Digital Twin AI</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-network" aria-hidden="true"></i></div>
+        <div class="name">National Rail Network</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-drone" aria-hidden="true"></i></div>
+        <div class="name">Autonomous Inspection</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,229,255,.08)">
+      <div style="font-size:9px;letter-spacing:1.5px;color:rgba(0,229,255,.35);margin-bottom:8px">API ENDPOINTS</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">POST /api/predict</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">GET  /api/sensor-data</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">GET  /api/alerts</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(100,0,255,.6)">WS   /ws/live-stream</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

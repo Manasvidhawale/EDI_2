@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#e0f7ff;font-family:'Rajdhani',sans-serif;overflow-x:hidden;min-height:100vh}
+
+:root{
+  --cyan:#00ff99;--blue:#00cc88;--neon:#00ff99;--amber:#ffaa00;--red:#ff1744;
+  --glass:rgba(0,25,20,0.72);--glass2:rgba(0,15,15,0.85);--border:rgba(0,255,153,0.25);
+}
+
+/* BACKGROUND */
+.bg{
+  position:fixed;inset:0;z-index:0;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,0.65) 0%,rgba(0,5,20,0.78) 40%,rgba(0,0,0,0.9) 100%),
+    url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=1600&q=80') center/cover no-repeat;
+}
+.scanlines{position:fixed;inset:0;z-index:1;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,0.03) 2px,rgba(0,229,255,0.03) 4px);pointer-events:none}
+.grid-overlay{position:fixed;inset:0;z-index:1;background-image:linear-gradient(rgba(0,229,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.particle{position:absolute;width:2px;height:2px;background:var(--cyan);border-radius:50%;animation:float linear infinite;opacity:0.6}
+
+@keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0}10%{opacity:.6}90%{opacity:.4}100%{transform:translateY(-10px) translateX(30px);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--cyan)}50%{opacity:.6;box-shadow:0 0 20px var(--cyan),0 0 40px rgba(0,229,255,0.4)}}
+@keyframes scan{0%{top:-4px}100%{top:100%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes trainMove{0%{left:2%}100%{left:92%}}
+@keyframes waveAnim{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-200}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 4px var(--cyan))}50%{filter:drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 24px var(--cyan))}}
+@keyframes flowLine{0%{stroke-dashoffset:300}100%{stroke-dashoffset:0}}
+@keyframes alertFlash{0%,100%{background:rgba(255,23,68,0.15);border-color:rgba(255,23,68,0.4)}50%{background:rgba(255,23,68,0.35);border-color:rgba(255,23,68,0.9)}}
+@keyframes numberCount{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* LAYOUT */
+.wrap{position:relative;z-index:10;padding:0 16px 40px}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border:2px solid var(--cyan);border-radius:4px;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite;position:relative;overflow:hidden}
+.logo-icon svg{width:20px;height:20px}
+.logo h1{font-family:'Orbitron',monospace;font-size:14px;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
+.logo p{font-size:11px;color:rgba(0,229,255,0.5);letter-spacing:2px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:20px}
+.status-pill{display:flex;align-items:center;gap:6px;background:rgba(0,229,255,0.08);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;letter-spacing:1px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:blink 1.2s infinite}
+.dot.amber{background:var(--amber);animation-delay:.4s}
+.dot.red{background:var(--red);animation:blink .6s infinite}
+.time{font-family:'Orbitron',monospace;font-size:12px;color:rgba(0,229,255,0.7)}
+
+/* HERO GRID */
+.hero{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}
+.hcard{background:var(--glass);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden;transition:border-color .3s}
+.hcard:hover{border-color:var(--cyan)}
+.hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);animation:scan 3s linear infinite;pointer-events:none}
+.hcard-label{font-size:10px;letter-spacing:2px;color:rgba(0,229,255,0.5);text-transform:uppercase;margin-bottom:6px}
+.hcard-value{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:var(--cyan);animation:numberCount .5s ease forwards}
+.hcard-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px}
+.hcard-bar{height:3px;background:rgba(0,229,255,0.1);border-radius:2px;margin-top:10px;overflow:hidden}
+.hcard-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#00aa77,var(--cyan));transition:width 1s ease}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.panel{background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:16px;position:relative;overflow:hidden}
+.panel::after{content:'';position:absolute;inset:0;border-radius:8px;border:1px solid transparent;background:linear-gradient(135deg,rgba(0,229,255,0.06),transparent) border-box;pointer-events:none}
+.panel-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel-title .ti{color:var(--cyan);opacity:.7;font-size:14px}
+.panel-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+/* SENSORS */
+.sensors-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sensor-item{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:6px;padding:10px}
+.s-name{font-size:10px;letter-spacing:1.5px;color:rgba(0,229,255,0.5);text-transform:uppercase}
+.s-val{font-family:'Orbitron',monospace;font-size:18px;color:#fff;margin:4px 0 2px}
+.s-unit{font-size:10px;color:rgba(255,255,255,.3)}
+.gauge-bar{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:8px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:2px;transition:width 1.5s ease}
+.gauge-fill.safe{background:linear-gradient(90deg,#00c853,#69f0ae)}
+.gauge-fill.warn{background:linear-gradient(90deg,var(--amber),#ffdd00)}
+.gauge-fill.critical{background:linear-gradient(90deg,#d50000,var(--red));animation:pulse .8s infinite}
+.badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:10px;letter-spacing:1px;margin-top:6px;font-weight:600}
+.badge.ok{background:rgba(0,200,83,0.15);color:#69f0ae;border:1px solid rgba(0,200,83,0.3)}
+.badge.warn{background:rgba(255,171,0,0.15);color:var(--amber);border:1px solid rgba(255,171,0,0.3)}
+.badge.crit{background:rgba(255,23,68,0.15);color:var(--red);border:1px solid rgba(255,23,68,0.3);animation:blink 1s infinite}
+
+/* TRACK VISUALIZER */
+.track-vis{position:relative;height:120px;background:rgba(0,0,0,0.3);border-radius:6px;border:1px solid rgba(0,229,255,0.1);overflow:hidden;margin-top:6px}
+.track-rail{position:absolute;left:0;right:0;height:4px;background:linear-gradient(90deg,rgba(0,229,255,0.3),var(--cyan),rgba(0,229,255,0.3));box-shadow:0 0 8px var(--cyan)}
+.track-rail.top{top:38%}
+.track-rail.bot{top:58%}
+.track-sleepers{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.sleeper{width:3px;height:52px;background:rgba(0,229,255,0.12);border-radius:1px}
+.train{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:22px;animation:trainMove 4s linear infinite}
+.train-body{width:100%;height:100%;background:linear-gradient(135deg,#00bb99,#008877);border-radius:4px 6px 4px 4px;border:1px solid var(--cyan);box-shadow:0 0 8px var(--cyan),inset 0 0 6px rgba(0,255,153,0.2);position:relative}
+.train-light{position:absolute;right:-3px;top:50%;transform:translateY(-50%);width:6px;height:6px;background:var(--cyan);border-radius:50%;box-shadow:0 0 8px var(--cyan),0 0 16px var(--cyan);animation:pulse 1s infinite}
+.checkpoint{position:absolute;bottom:8px;width:8px;height:8px;border:1px solid var(--cyan);border-radius:50%;background:rgba(0,229,255,0.2);transform:translateX(-50%)}
+.checkpoint.warn{border-color:var(--amber);background:rgba(255,171,0,0.2)}
+.checkpoint.danger{border-color:var(--red);background:rgba(255,23,68,0.2);animation:blink .8s infinite}
+.scan-pulse{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,229,255,0.6);box-shadow:0 0 8px var(--cyan);animation:trainMove 2s ease-in-out infinite;animation-direction:alternate}
+.track-info{display:flex;justify-content:space-around;margin-top:8px;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.track-segment{display:flex;flex-direction:column;align-items:center;gap:2px}
+.seg-dot{width:6px;height:6px;border-radius:50%}
+
+/* AI PANEL */
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ai-metric{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:6px;padding:10px;text-align:center}
+.ai-metric .val{font-family:'Orbitron',monospace;font-size:16px;color:var(--cyan)}
+.ai-metric .lbl{font-size:10px;color:rgba(0,229,255,.4);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+.progress-ring{width:70px;height:70px;margin:0 auto 10px}
+.log-list{display:flex;flex-direction:column;gap:4px;max-height:90px;overflow-y:auto}
+.log-item{font-size:10px;color:rgba(255,255,255,.45);padding:3px 6px;background:rgba(0,0,0,.2);border-left:2px solid rgba(0,229,255,.2);border-radius:0 3px 3px 0;font-family:'Exo 2',sans-serif}
+.log-item.warn{border-left-color:rgba(255,171,0,.5);color:rgba(255,171,0,.7)}
+
+/* ALERTS */
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{border-radius:6px;padding:10px 12px;border:1px solid rgba(255,23,68,0.3);background:rgba(255,23,68,0.08);display:flex;align-items:center;gap:10px;animation:alertFlash 2s infinite}
+.alert-item.warn-item{border-color:rgba(255,171,0,0.3);background:rgba(255,171,0,0.06);animation:none}
+.alert-item.info-item{border-color:rgba(0,229,255,0.2);background:rgba(0,229,255,0.04);animation:none}
+.alert-icon{font-size:16px;flex-shrink:0}
+.alert-text .title{font-size:12px;font-weight:600;letter-spacing:.5px}
+.alert-text .sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+.alert-time{font-family:'Orbitron',monospace;font-size:9px;color:rgba(255,255,255,.3);margin-left:auto;white-space:nowrap}
+
+/* ARCH FLOW */
+.flow-svg{width:100%;margin-top:4px}
+
+/* CHARTS */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.chart-mini{position:relative;height:100px}
+
+/* DIGITAL TWIN */
+.twin-vis{height:150px;position:relative;background:rgba(0,0,0,.4);border-radius:6px;border:1px solid var(--border);overflow:hidden;margin-top:6px}
+.twin-track{position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%)}
+.twin-node{position:absolute;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px}
+.twin-node-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--cyan);background:rgba(0,229,255,.15);animation:pulse 2s infinite}
+.twin-node-dot.ok{border-color:#69f0ae;background:rgba(0,200,83,.15)}
+.twin-node-dot.danger{border-color:var(--red);background:rgba(255,23,68,.15);animation-duration:.6s}
+.twin-label{font-size:9px;color:rgba(0,229,255,.6);letter-spacing:1px;white-space:nowrap}
+.twin-grid{background-image:linear-gradient(rgba(0,229,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.06) 1px,transparent 1px);background-size:20px 20px;position:absolute;inset:0;border-radius:6px}
+
+/* FUTURE SCOPE */
+.scope-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.scope-card{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:6px;padding:10px;text-align:center;transition:all .3s;cursor:default}
+.scope-card:hover{background:rgba(0,229,255,.09);border-color:var(--cyan);transform:translateY(-2px)}
+.scope-card .icon{font-size:20px;margin-bottom:5px;color:var(--cyan)}
+.scope-card .name{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.6);text-transform:uppercase;line-height:1.4}
+
+/* RESPONSIVE */
+@media(max-width:1000px){.main-grid{grid-template-columns:1fr 1fr}.hero{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.main-grid{grid-template-columns:1fr}.hero{grid-template-columns:repeat(2,1fr)}.chart-row{grid-template-columns:1fr}.scope-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<div class="bg"></div>
+<div class="scanlines"></div>
+<div class="grid-overlay"></div>
+<div class="particles" id="particles"></div>
+
+<div class="wrap">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="#00e5ff" stroke-width="1.5">
+        <path d="M2 14 L10 4 L18 14"/>
+        <path d="M5 14 L10 8 L15 14"/>
+        <line x1="2" y1="16" x2="18" y2="16"/>
+      </svg>
+    </div>
+    <div>
+      <h1>RAILSENSE AI</h1>
+      <p>Railway Track Monitoring System v3.1.4</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill"><div class="dot"></div>NETWORK LIVE</div>
+    <div class="status-pill"><div class="dot amber"></div>ESP32 NODES: 4</div>
+    <div class="status-pill"><div class="dot red"></div>ALERT ACTIVE</div>
+    <div class="time" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- HERO COMMAND CENTER -->
+<div class="hero" style="margin-top:12px">
+  <div class="hcard">
+    <div class="hcard-label">Track Safety</div>
+    <div class="hcard-value">87.4%</div>
+    <div class="hcard-sub">Overall network score</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:87%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Threat Level</div>
+    <div class="hcard-value" style="color:var(--amber)">MODERATE</div>
+    <div class="hcard-sub">Zone C-4 anomaly detected</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:54%;background:linear-gradient(90deg,var(--amber),#ffdd00)"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">AI Confidence</div>
+    <div class="hcard-value">94.2%</div>
+    <div class="hcard-sub">Model accuracy: 98.1%</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:94%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Active Sensors</div>
+    <div class="hcard-value">12/14</div>
+    <div class="hcard-sub">2 nodes offline</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:85%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Network Health</div>
+    <div class="hcard-value">96.7%</div>
+    <div class="hcard-sub">WiFi RSSI: -42 dBm</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:96%"></div></div>
+  </div>
+  <div class="hcard">
+    <div class="hcard-label">Uptime</div>
+    <div class="hcard-value">99.1%</div>
+    <div class="hcard-sub" id="uptime">Loading...</div>
+    <div class="hcard-bar"><div class="hcard-fill" style="width:99%"></div></div>
+  </div>
+</div>
+
+<!-- MAIN GRID: Sensors + Track + AI -->
+<div class="main-grid">
+
+  <!-- SENSOR PANEL -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-antenna" aria-hidden="true"></i>LIVE SENSOR DATA</div>
+    <div class="sensors-grid">
+      <div class="sensor-item">
+        <div class="s-name">Ultrasonic</div>
+        <div><span class="s-val" id="dist">12.4</span><span class="s-unit"> cm</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" id="dist-bar" style="width:62%"></div></div>
+        <span class="badge ok" id="dist-badge">NORMAL</span>
+      </div>
+      <div class="sensor-item">
+        <div class="s-name">Vibration X</div>
+        <div><span class="s-val" id="vib">0.83</span><span class="s-unit"> g</span></div>
+        <div class="gauge-bar"><div class="gauge-fill warn" id="vib-bar" style="width:68%"></div></div>
+        <span class="badge warn" id="vib-badge">ELEVATED</span>
+      </div>
+      <div class="sensor-item">
+        <div class="s-name">Accel Y</div>
+        <div><span class="s-val" id="accel">0.21</span><span class="s-unit"> g</span></div>
+        <div class="gauge-bar"><div class="gauge-fill safe" id="acc-bar" style="width:21%"></div></div>
+        <span class="badge ok">STABLE</span>
+      </div>
+      <div class="sensor-item">
+        <div class="s-name">Temperature</div>
+        <div><span class="s-val" id="temp">42.3</span><span class="s-unit"> °C</span></div>
+        <div class="gauge-bar"><div class="gauge-fill warn" style="width:58%"></div></div>
+        <span class="badge warn">WARM</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(0,229,255,.08)">
+      <div style="font-size:10px;letter-spacing:1.5px;color:rgba(0,229,255,.4);margin-bottom:8px">SENSOR TREND (30s)</div>
+      <canvas id="sensorChart" style="width:100%;height:60px" height="60"></canvas>
+    </div>
+  </div>
+
+  <!-- TRACK VISUALIZER -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-route" aria-hidden="true"></i>LIVE TRACK MONITOR</div>
+    <div class="track-vis">
+      <div class="twin-grid"></div>
+      <div class="track-sleepers" id="sleepers"></div>
+      <div class="track-rail top"></div>
+      <div class="track-rail bot"></div>
+      <div class="train"><div class="train-body"><div class="train-light"></div></div></div>
+      <div class="scan-pulse"></div>
+      <!-- Checkpoints -->
+      <div class="checkpoint" style="left:20%"></div>
+      <div class="checkpoint warn" style="left:42%"></div>
+      <div class="checkpoint danger" style="left:65%"></div>
+      <div class="checkpoint" style="left:82%"></div>
+    </div>
+    <div class="track-info">
+      <div class="track-segment"><div class="seg-dot" style="background:#69f0ae"></div><span>Zone A</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:var(--amber)"></div><span>Zone B</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:var(--red);animation:blink .8s infinite"></div><span>Zone C</span></div>
+      <div class="track-segment"><div class="seg-dot" style="background:#69f0ae"></div><span>Zone D</span></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <div style="font-size:10px;color:rgba(255,255,255,.4);padding:3px 8px;border:1px solid rgba(0,229,255,.1);border-radius:10px">Track Length: 4.2 km</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);padding:3px 8px;border:1px solid rgba(0,229,255,.1);border-radius:10px">Speed: 87 km/h</div>
+      <div style="font-size:10px;color:var(--red);padding:3px 8px;border:1px solid rgba(255,23,68,.3);border-radius:10px;animation:blink 1.2s infinite">⚠ Crack Zone C-4</div>
+    </div>
+    <!-- Digital twin mini -->
+    <div style="margin-top:10px">
+      <div style="font-size:9px;letter-spacing:1.5px;color:rgba(0,229,255,.3);margin-bottom:4px">DIGITAL TWIN — TRACK STATUS</div>
+      <div class="twin-vis">
+        <div class="twin-grid"></div>
+        <svg width="100%" height="150" style="position:absolute;inset:0" viewBox="0 0 300 150" preserveAspectRatio="none">
+          <line x1="20" y1="75" x2="280" y2="75" stroke="rgba(0,229,255,.3)" stroke-width="3" stroke-dasharray="8 4"/>
+          <line x1="20" y1="60" x2="280" y2="60" stroke="rgba(0,229,255,.2)" stroke-width="1.5"/>
+          <line x1="20" y1="90" x2="280" y2="90" stroke="rgba(0,229,255,.2)" stroke-width="1.5"/>
+          <rect x="50" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="90" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="130" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="170" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="210" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <rect x="250" y="55" width="6" height="40" fill="rgba(0,229,255,.08)" rx="1"/>
+          <!-- crack zone -->
+          <ellipse cx="190" cy="75" rx="18" ry="8" fill="rgba(255,23,68,.18)" stroke="rgba(255,23,68,.6)" stroke-width="1.5"/>
+          <text x="190" y="78" text-anchor="middle" font-size="7" fill="rgba(255,23,68,.9)" font-family="Orbitron,monospace">CRACK</text>
+        </svg>
+        <div class="twin-node" style="left:20%">
+          <div class="twin-node-dot ok"></div>
+          <div class="twin-label">S-01</div>
+        </div>
+        <div class="twin-node" style="left:45%">
+          <div class="twin-node-dot" style="border-color:var(--amber);background:rgba(255,171,0,.15)"></div>
+          <div class="twin-label">S-02</div>
+        </div>
+        <div class="twin-node" style="left:65%">
+          <div class="twin-node-dot danger"></div>
+          <div class="twin-label">S-03</div>
+        </div>
+        <div class="twin-node" style="left:85%">
+          <div class="twin-node-dot ok"></div>
+          <div class="twin-label">S-04</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI + ALERTS -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-brain" aria-hidden="true"></i>AI PREDICTION ENGINE</div>
+    <div class="ai-grid">
+      <div class="ai-metric">
+        <div class="val" id="crack-prob">73.2%</div>
+        <div class="lbl">Crack Prob.</div>
+      </div>
+      <div class="ai-metric">
+        <div class="val" style="color:var(--amber)">HIGH</div>
+        <div class="lbl">Severity</div>
+      </div>
+      <div class="ai-metric">
+        <div class="val">94.2%</div>
+        <div class="lbl">Confidence</div>
+      </div>
+      <div class="ai-metric">
+        <div class="val" style="color:#69f0ae">LOW</div>
+        <div class="lbl">Anomaly Rate</div>
+      </div>
+    </div>
+    <!-- Prediction bar -->
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px"><span>Anomaly Probability</span><span id="anom-pct">73%</span></div>
+      <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden">
+        <div id="anom-bar" style="height:100%;width:73%;background:linear-gradient(90deg,var(--amber),var(--red));border-radius:3px;transition:width .8s ease"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;letter-spacing:1.5px;color:rgba(0,229,255,.4);margin-bottom:5px">AI DECISION LOG</div>
+    <div class="log-list" id="logList">
+      <div class="log-item warn">14:32:11 — Vibration spike detected at Zone C-4</div>
+      <div class="log-item warn">14:31:58 — Crack probability exceeded threshold (70%)</div>
+      <div class="log-item">14:31:22 — Sensor S-03 anomaly classified: Surface crack</div>
+      <div class="log-item">14:30:45 — Model retrained on 2847 samples</div>
+      <div class="log-item">14:29:10 — Distance deviation: +3.2cm from baseline</div>
+    </div>
+
+    <div style="margin-top:14px;border-top:1px solid rgba(0,229,255,.08);padding-top:12px">
+      <div class="panel-title" style="margin-bottom:10px"><i class="ti ti-alert-triangle" aria-hidden="true"></i>ALERT MATRIX</div>
+      <div class="alert-list">
+        <div class="alert-item">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--red)">CRITICAL — Track Crack Zone C-4</div>
+            <div class="sub">Ultrasonic delta 8.2cm · Driver notified</div>
+          </div>
+          <div class="alert-time">14:32:14</div>
+        </div>
+        <div class="alert-item warn-item">
+          <div class="alert-icon">🔔</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--amber)">WARNING — High Vibration</div>
+            <div class="sub">MPU6050 accel 0.83g · Threshold 0.75g</div>
+          </div>
+          <div class="alert-time">14:31:55</div>
+        </div>
+        <div class="alert-item info-item">
+          <div class="alert-icon" style="font-size:14px">ℹ️</div>
+          <div class="alert-text">
+            <div class="title" style="color:var(--cyan)">INFO — Sensor S-02 sync</div>
+            <div class="sub">WiFi reconnected · RSSI: -52 dBm</div>
+          </div>
+          <div class="alert-time">14:29:01</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM ROW: Charts + Architecture + Future -->
+<div class="main-grid" style="margin-top:12px">
+
+  <!-- ANALYTICS -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-chart-line" aria-hidden="true"></i>DATA ANALYTICS</div>
+    <div class="chart-row" style="margin-top:0">
+      <div>
+        <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">VIBRATION TREND</div>
+        <div class="chart-mini"><canvas id="vibChart" height="100" aria-label="Vibration trend chart"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">DISTANCE FLUCTUATION</div>
+        <div class="chart-mini"><canvas id="distChart" height="100" aria-label="Distance chart"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:rgba(0,229,255,.35);letter-spacing:1px;margin-bottom:4px">SEVERITY DISTRIBUTION</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;display:flex">
+          <div style="width:58%;background:#69f0ae;transition:width 1s"></div>
+          <div style="width:28%;background:var(--amber)"></div>
+          <div style="width:14%;background:var(--red);animation:pulse .8s infinite"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:5px;font-size:9px;color:rgba(255,255,255,.35)">
+        <span style="color:#69f0ae">■ Normal 58%</span>
+        <span style="color:var(--amber)">■ Warn 28%</span>
+        <span style="color:var(--red)">■ Critical 14%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE FLOW -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-topology-complex" aria-hidden="true"></i>SYSTEM ARCHITECTURE</div>
+    <svg class="flow-svg" viewBox="0 0 260 280" style="max-height:280px">
+      <defs>
+        <marker id="fw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+      <!-- Nodes -->
+      <g id="arcFlow">
+        <!-- Rail Track -->
+        <rect x="70" y="4" width="120" height="30" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.3)" stroke-width="1"/>
+        <text x="130" y="24" text-anchor="middle" font-size="10" fill="#00e5ff" font-family="Orbitron,monospace" letter-spacing="1">RAIL TRACK</text>
+        <!-- Arrow -->
+        <line x1="130" y1="34" x2="130" y2="52" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Sensors -->
+        <rect x="30" y="52" width="200" height="32" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.3)" stroke-width="1"/>
+        <text x="80" y="70" text-anchor="middle" font-size="8.5" fill="#aaa" font-family="Rajdhani">Ultrasonic</text>
+        <text x="180" y="70" text-anchor="middle" font-size="8.5" fill="#aaa" font-family="Rajdhani">MPU6050</text>
+        <line x1="130" y1="72" x2="130" y2="72" stroke="none"/>
+        <text x="130" y="73" text-anchor="middle" font-size="8.5" fill="rgba(0,229,255,.5)" font-family="Rajdhani">+</text>
+        <!-- Arrow -->
+        <line x1="130" y1="84" x2="130" y2="102" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- ESP32 -->
+        <rect x="70" y="102" width="120" height="30" rx="6" fill="rgba(0,100,200,.12)" stroke="rgba(0,150,255,.4)" stroke-width="1"/>
+        <text x="130" y="122" text-anchor="middle" font-size="10" fill="#4fc3f7" font-family="Orbitron,monospace">ESP32 MCU</text>
+        <!-- Arrow -->
+        <line x1="130" y1="132" x2="130" y2="150" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- AI Processing -->
+        <rect x="55" y="150" width="150" height="30" rx="6" fill="rgba(100,0,200,.1)" stroke="rgba(150,0,255,.35)" stroke-width="1"/>
+        <text x="130" y="170" text-anchor="middle" font-size="10" fill="#ce93d8" font-family="Orbitron,monospace">AI ENGINE</text>
+        <!-- Arrow -->
+        <line x1="130" y1="180" x2="130" y2="198" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Decision Engine -->
+        <rect x="60" y="198" width="140" height="30" rx="6" fill="rgba(255,171,0,.07)" stroke="rgba(255,171,0,.3)" stroke-width="1"/>
+        <text x="130" y="218" text-anchor="middle" font-size="10" fill="#ffab00" font-family="Orbitron,monospace">DECISION ENGINE</text>
+        <!-- Arrow -->
+        <line x1="90" y1="228" x2="55" y2="248" stroke="#00e5ff" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <line x1="170" y1="228" x2="205" y2="248" stroke="rgba(255,23,68,.6)" stroke-width="1" marker-end="url(#fw)" stroke-dasharray="4 3"/>
+        <!-- Dashboard -->
+        <rect x="10" y="248" width="90" height="28" rx="6" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.25)" stroke-width="1"/>
+        <text x="55" y="266" text-anchor="middle" font-size="9" fill="#00e5ff" font-family="Orbitron,monospace">DASHBOARD</text>
+        <!-- Alerts -->
+        <rect x="160" y="248" width="90" height="28" rx="6" fill="rgba(255,23,68,.07)" stroke="rgba(255,23,68,.3)" stroke-width="1"/>
+        <text x="205" y="266" text-anchor="middle" font-size="9" fill="#ff1744" font-family="Orbitron,monospace">ALERTS</text>
+        <!-- APIs label -->
+        <text x="130" y="140" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.2)" font-family="Exo 2">MQTT / WebSocket / REST</text>
+      </g>
+      <!-- Animated scan line -->
+      <rect id="flowScan" x="10" y="0" width="240" height="3" rx="1" fill="rgba(0,229,255,.3)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,280;0,0" dur="3s" repeatCount="indefinite"/>
+      </rect>
+    </svg>
+  </div>
+
+  <!-- FUTURE SCOPE -->
+  <div class="panel">
+    <div class="panel-title"><i class="ti ti-rocket" aria-hidden="true"></i>FUTURE SCOPE</div>
+    <div class="scope-grid">
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-cpu" aria-hidden="true"></i></div>
+        <div class="name">Edge AI Inference</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-tool" aria-hidden="true"></i></div>
+        <div class="name">Predictive Maintenance</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-cloud-computing" aria-hidden="true"></i></div>
+        <div class="name">Cloud Analytics</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-device-laptop" aria-hidden="true"></i></div>
+        <div class="name">Digital Twin AI</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-network" aria-hidden="true"></i></div>
+        <div class="name">National Rail Network</div>
+      </div>
+      <div class="scope-card">
+        <div class="icon"><i class="ti ti-drone" aria-hidden="true"></i></div>
+        <div class="name">Autonomous Inspection</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,229,255,.08)">
+      <div style="font-size:9px;letter-spacing:1.5px;color:rgba(0,229,255,.35);margin-bottom:8px">API ENDPOINTS</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">POST /api/predict</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">GET  /api/sensor-data</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(0,229,255,.7)">GET  /api/alerts</div>
+        <div style="font-size:10px;font-family:monospace;background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:4px;padding:5px 8px;color:rgba(100,0,255,.6)">WS   /ws/live-stream</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// Clock
+function updateClock(){
+  const n=new Date();
+  const pad=v=>String(v).padStart(2,'0');
+  document.getElementById('clock').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+}
+setInterval(updateClock,1000); updateClock();
+
+// Uptime
+const start=Date.now()-864000000;
+setInterval(()=>{
+  const ms=Date.now()-start;
+  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);
+  document.getElementById('uptime').textContent=`${h}h ${m}m continuous`;
+},5000);
+document.getElementById('uptime').textContent='240h 00m continuous';
+
+// Particles
+const pc=document.getElementById('particles');
+for(let i=0;i<18;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.style.left=Math.random()*100+'%';
+  p.style.animationDuration=(8+Math.random()*14)+'s';
+  p.style.animationDelay=(Math.random()*10)+'s';
+  p.style.width=p.style.height=(1+Math.random()*2)+'px';
+  pc.appendChild(p);
+}
+
+// Sleepers
+const sl=document.getElementById('sleepers');
+for(let i=0;i<22;i++){const d=document.createElement('div');d.className='sleeper';sl.appendChild(d);}
+
+// Simulated sensor updates
+const sensors=[
+  {id:'dist',barId:'dist-bar',badgeId:'dist-badge',min:8,max:22,unit:'cm',threshWarn:16,threshCrit:20},
+  {id:'vib',barId:'vib-bar',badgeId:'vib-badge',min:0.1,max:1.4,unit:'g',threshWarn:0.75,threshCrit:1.1},
+  {id:'accel',min:0.05,max:0.5,unit:'g'},
+  {id:'temp',min:38,max:56,unit:'°C'}
+];
+let sensorHistory={dist:[],vib:[]};
+function randBetween(a,b){return a+(Math.random()*(b-a));}
+function updateSensors(){
+  sensors.forEach(s=>{
+    const v=randBetween(s.min,s.max);
+    const el=document.getElementById(s.id);
+    if(el){
+      el.textContent=v>9?v.toFixed(1):v.toFixed(2);
+      if(s.barId){
+        const pct=((v-s.min)/(s.max-s.min)*100).toFixed(0);
+        const bar=document.getElementById(s.barId);
+        if(bar){
+          bar.style.width=pct+'%';
+          bar.className='gauge-fill '+(v>=s.threshCrit?'critical':v>=s.threshWarn?'warn':'safe');
+        }
+      }
+      if(s.badgeId){
+        const badge=document.getElementById(s.badgeId);
+        if(badge){
+          if(v>=s.threshCrit){badge.textContent='CRITICAL';badge.className='badge crit';}
+          else if(v>=s.threshWarn){badge.textContent='ELEVATED';badge.className='badge warn';}
+          else{badge.textContent='NORMAL';badge.className='badge ok';}
+        }
+      }
+    }
+    if(s.id==='dist') sensorHistory.dist.push(v);
+    if(s.id==='vib') sensorHistory.vib.push(v);
+  });
+  // AI crack prob
+  const vib=parseFloat(document.getElementById('vib').textContent);
+  const prob=Math.min(95,(vib/1.4*100*0.9+Math.random()*6)).toFixed(1);
+  const cpEl=document.getElementById('crack-prob');
+  if(cpEl) cpEl.textContent=prob+'%';
+  const ab=document.getElementById('anom-bar');
+  const ap=document.getElementById('anom-pct');
+  if(ab){ab.style.width=prob+'%';}
+  if(ap){ap.textContent=Math.round(prob)+'%';}
+}
+setInterval(updateSensors,1800);
+
+// Charts
+const labels=Array.from({length:20},(_,i)=>i);
+function mkData(min,max){return labels.map(()=>randBetween(min,max));}
+const vibData=mkData(0.1,1.4);
+const distData=mkData(8,20);
+const chartOpts=(color)=>({
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false}},
+  scales:{
+    x:{display:false},
+    y:{display:false,min:0}
+  },
+  animation:{duration:600},
+  elements:{point:{radius:0},line:{tension:.4,borderWidth:1.5}}
+});
+
+new Chart(document.getElementById('vibChart'),{
+  type:'line',
+  data:{labels,datasets:[{data:vibData,borderColor:'#ffab00',backgroundColor:'rgba(255,171,0,.08)',fill:true}]},
+  options:chartOpts('#ffab00')
+});
+new Chart(document.getElementById('distChart'),{
+  type:'line',
+  data:{labels,datasets:[{data:distData,borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.07)',fill:true}]},
+  options:chartOpts('#00e5ff')
+});
+
+// Sensor mini chart (sparkline)
+const sCtx=document.getElementById('sensorChart');
+if(sCtx){
+  const sChart=new Chart(sCtx,{
+    type:'bar',
+    data:{labels:labels.slice(0,15),datasets:[
+      {data:Array.from({length:15},()=>randBetween(0.1,1.4)),backgroundColor:'rgba(0,229,255,.25)',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:400}}
+  });
+  setInterval(()=>{
+    sChart.data.datasets[0].data.push(randBetween(0.1,1.4));
+    sChart.data.datasets[0].data.shift();
+    sChart.update('none');
+  },1800);
+}
+
+// Live log updates
+const logMessages=[
+  {cls:'warn',msg:'Vibration anomaly in sector B-2'},
+  {cls:'',msg:'AI model inference: 94.2% confidence'},
+  {cls:'warn',msg:'Track temp spike +3.1°C at Z-C'},
+  {cls:'',msg:'Sensor S-01 heartbeat OK · 28ms'},
+  {cls:'warn',msg:'Crack width estimate: 4.2mm'},
+  {cls:'',msg:'ESP32 node 3 reconnected via WiFi'},
+];
+let li=0;
+setInterval(()=>{
+  const list=document.getElementById('logList');
+  if(!list)return;
+  const now=new Date();
+  const t=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const item=document.createElement('div');
+  const m=logMessages[li%logMessages.length]; li++;
+  item.className='log-item '+(m.cls||'');
+  item.textContent=`${t} — ${m.msg}`;
+  list.insertBefore(item,list.firstChild);
+  if(list.children.length>8) list.removeChild(list.lastChild);
+},3500);
+</script>
